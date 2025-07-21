@@ -2,9 +2,9 @@ from flask import Flask, render_template, request, jsonify
 from src import script
 
 app = Flask(__name__)
-dbsys = script.IinitDatabase("jonashoever.de","mika","kleinerschwanz","LF5")
-deldatasys = script.DeleteUserData("jonashoever.de","mika","kleinerschwanz","LF5")
-readdatasys = script.ReadUserData("jonashoever.de","mika","kleinerschwanz","LF5")
+dbsys = script.IinitDatabase("jonashoever.de","mika","password64534231","LF5")
+deldatasys = script.DeleteUserData("jonashoever.de","mika","password64534231","LF5")
+readdatasys = script.ReadUserData("jonashoever.de","mika","password64534231","LF5")
 
 @app.route("/api/initdb", methods=["POST"])
 def initdb():
