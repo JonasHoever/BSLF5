@@ -1,0 +1,47 @@
+{% extends "layouts/layout.html" %}
+
+{% block title %}Datenbank Initialisieren{% endblock %}
+
+{% block content %}
+<div class="container text-center">
+    <h1 class="text-2xl font-bold text-gray-800 mb-4">Datenbank Initialisierung</h1>
+    <p class="text-gray-600 mb-6">Klicken Sie auf die Schaltfläche, um die Datenbank zu initialisieren. Dies kann je nach Skript eine Weile dauern.</p>
+    
+    <button class="btn-primary" id="initDbButton">
+        Initialisierung starten
+    </button>
+    
+    <div id="feedback" class="mt-6"></div>
+</div>
+
+<script>
+    document.getElementById('initDbButton').addEventListener('click', async () => {
+        const feedbackDiv = document.getElementById('feedback');
+        const button = document.getElementById('initDbButton');
+        
+        feedbackDiv.innerHTML = '<div class="text-center text-gray-500">Initialisierung läuft...</div>';
+        button.disabled = true;
+        button.classList.add('opacity-50', 'cursor-not-allowed');
+
+        try {
+            const response = await fetch('/api/initdb', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+            });
+
+            const data = await response.json();
+
+            if (data.error) {
+                 feedbackDiv.innerHTML = `<div class="p-4 bg-red-100 text-red-700 rounded-md">${data.error}</div>`;
+            } else {
+                 feedbackDiv.innerHTML = `<div class="p-4 bg-green-100 text-green-700 rounded-md">${data.message}</div>`;
+            }
+        } catch (error) {
+            feedbackDiv.innerHTML = `<div class="p-4 bg-red-100 text-red-700 rounded-md">Ein Fehler ist aufgetreten: ${error.message}</div>`;
+        } finally {
+            button.disabled = false;
+            button.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+    });
+</script>
+{% endblock %}

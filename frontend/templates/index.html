@@ -1,0 +1,28 @@
+{% extends "layouts/layout.html" %}
+
+{% block title %}Willkommen{% endblock %}
+
+{% block content %}
+<div class="container text-center">
+    <h1 class="text-4xl font-bold text-gray-800 mb-4">Willkommen beim Kunden-Dashboard</h1>
+    <p class="text-lg text-gray-600 mb-8">Wählen Sie eine der oben genannten Optionen, um loszulegen.</p>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <a href="/read-by-id" class="block p-6 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100">
+            <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900">Suche nach ID</h5>
+            <p class="font-normal text-gray-700">Finden Sie Kundendaten schnell über die eindeutige Kundennummer.</p>
+        </a>
+        <a href="/read-by-name" class="block p-6 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100">
+            <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900">Suche nach Name</h5>
+            <p class="font-normal text-gray-700">Durchsuchen Sie die Datenbank nach Kunden anhand ihrer persönlichen Daten.</p>
+        </a>
+        <a href="/delete-customer" class="block p-6 bg-red-50 border border-red-200 rounded-lg shadow hover:bg-red-100">
+            <h5 class="mb-2 text-2xl font-bold tracking-tight text-red-900">Kunde löschen</h5>
+            <p class="font-normal text-red-700">Entfernen Sie einen Kunden permanent aus der Datenbank.</p>
+        </a>
+        <a href="/init-database" class="block p-6 bg-gray-50 border border-gray-200 rounded-lg shadow hover:bg-gray-100">
+            <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900">Datenbank Initialisieren</h5>
+            <p class="font-normal text-gray-700">Führen Sie das Initialisierungsskript für die Datenbank aus.</p>
+        </a>
+    </div>
+</div>
+{% endblock %}

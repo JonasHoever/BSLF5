@@ -1,0 +1,144 @@
+{% extends "layouts/layout.html" %}
+
+{% block title %}Suche nach Kundennamen{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="text-2xl font-bold text-gray-800 mb-6">Nutzerdaten anhand persönlicher Daten auslesen</h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <input type="text" id="first_name" class="form-input" placeholder="Vorname">
+        <input type="text" id="last_name" class="form-input" placeholder="Nachname">
+        <input type="text" id="street" class="form-input" placeholder="Straße">
+        <input type="text" id="postcode" class="form-input" placeholder="Postleitzahl">
+        <input type="text" id="residence" class="form-input" placeholder="Wohnort">
+    </div>
+
+    <button class="btn-primary w-full mt-6" id="searchButton">Suchen</button>
+
+    <div id="feedback" class="mt-6"></div>
+
+    <div class="hidden mt-6" id="output">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">Suchergebnisse</h2>
+        <div id="results-container" class="space-y-6">
+            </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('searchButton').addEventListener('click', async () => {
+        const payload = {
+            first_name: document.getElementById('first_name').value.trim(),
+            last_name: document.getElementById('last_name').value.trim(),
+            street: document.getElementById('street').value.trim(),
+            postcode: document.getElementById('postcode').value.trim(),
+            residence: document.getElementById('residence').value.trim(),
+        };
+
+        const outputDiv = document.getElementById('output');
+        const resultsContainer = document.getElementById('results-container');
+        const feedbackDiv = document.getElementById('feedback');
+
+        outputDiv.classList.add('hidden');
+        resultsContainer.innerHTML = ''; // Clear previous results
+        feedbackDiv.innerHTML = '<div class="text-center text-gray-500">Suche läuft...</div>';
+
+        try {
+            const response = await fetch('/api/read_customer_data_name', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+
+            const data = await response.json();
+            feedbackDiv.innerHTML = ''; // Clear "Suche läuft..." message
+
+            if (data.error) {
+                feedbackDiv.innerHTML = `<div class="p-4 bg-yellow-100 text-yellow-800 rounded-md">${data.error}</div>`;
+            } else if (Array.isArray(data) && data.length > 0) {
+                data.forEach(customer => {
+                    const card = document.createElement('div');
+                    card.className = 'p-4 border rounded-lg shadow-sm bg-gray-50 flex flex-col md:flex-row md:items-center justify-between'; // Added flex for layout
+                    card.innerHTML = `
+                        <div>
+                            <div class="result-item"><span class="result-item-label">KundenID:</span><span class="result-item-value">${customer.KundenID || 'N/A'}</span></div>
+                            <div class="result-item"><span class="result-item-label">Name:</span><span class="result-item-value">${customer.Vorname || ''} ${customer.Nachname || ''}</span></div>
+                            <div class="result-item"><span class="result-item-label">Adresse:</span><span class="result-item-value">${customer.Straße || ''} ${customer.Hausnummer || ''}, ${customer.PLZ || ''} ${customer.Ort || ''}</span></div>
+                            <div class="result-item"><span class="result-item-label">AuftragID:</span><span class="result-item-value">${customer.AuftragID || 'N/A'}</span></div>
+                            <div class="result-item"><span class="result-item-label">Bestelldatum:</span><span class="result-item-value">${customer.Bestelldatum ? new Date(customer.Bestelldatum).toLocaleDateString('de-DE') : 'N/A'}</span></div>
+                            <div class="result-item"><span class="result-item-label">Abholdatum:</span><span class="result-item-value">${customer.Abholdatum ? new Date(customer.Abholdatum).toLocaleDateString('de-DE') : 'N/A'}</span></div>
+                            <div class="result-item"><span class="result-item-label">Gesamtpreis:</span><span class="result-item-value">${customer.Gesamtpreis !== undefined && customer.Gesamtpreis !== null ? customer.Gesamtpreis.toFixed(2) + ' €' : 'N/A'}</span></div>
+                        </div>
+                        <button class="delete-customer-btn btn-danger mt-4 md:mt-0" data-customer-id="${customer.KundenID}">
+                            <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" />
+                            </svg>
+                            Kunde löschen
+                        </button>
+                    `;
+                    resultsContainer.appendChild(card);
+                });
+                outputDiv.classList.remove('hidden');
+
+                // Add event listeners to the new delete buttons
+                document.querySelectorAll('.delete-customer-btn').forEach(button => {
+                    button.addEventListener('click', async (event) => {
+                        const customerID = event.currentTarget.dataset.customerId;
+                        await deleteCustomer(customerID, event.currentTarget.closest('.p-4')); // Pass the card element to remove it
+                    });
+                });
+
+            } else {
+                 feedbackDiv.innerHTML = '<div class="p-4 bg-blue-100 text-blue-700 rounded-md">Keine passenden Kunden gefunden.</div>';
+            }
+        } catch (error) {
+            feedbackDiv.innerHTML = `<div class="p-4 bg-red-100 text-red-700 rounded-md">Ein Fehler ist aufgetreten: ${error.message}</div>`;
+        }
+    });
+
+    // --- New Function for Deletion ---
+    async function deleteCustomer(customerID, cardElement) {
+        const feedbackDiv = document.getElementById('feedback'); // Use the general feedback div
+        feedbackDiv.innerHTML = ''; // Clear previous messages
+
+        if (!customerID) {
+            feedbackDiv.innerHTML = '<div class="p-4 bg-red-100 text-red-700 rounded-md">Fehler: Keine Kunden-ID zum Löschen vorhanden.</div>';
+            return;
+        }
+
+        if (!confirm(`Sind Sie sicher, dass Sie den Kunden mit der ID ${customerID} endgültig löschen möchten?`)) {
+            feedbackDiv.innerHTML = ''; // Clear confirmation prompt if user cancels
+            return;
+        }
+
+        try {
+            feedbackDiv.innerHTML = '<div class="text-center text-gray-500">Löschvorgang wird ausgeführt...</div>';
+            const response = await fetch('/api/delete_user_by_id', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ customerID: customerID }),
+            });
+
+            const data = await response.json();
+            feedbackDiv.innerHTML = ''; // Clear "Löschvorgang wird ausgeführt..."
+
+            if (data.error) {
+                feedbackDiv.innerHTML = `<div class="p-4 bg-red-100 text-red-700 rounded-md">${data.error}</div>`;
+            } else {
+                feedbackDiv.innerHTML = `<div class="p-4 bg-green-100 text-green-700 rounded-md">${data.message}</div>`;
+                // Remove the customer card from the DOM after successful deletion
+                if (cardElement) {
+                    cardElement.remove();
+                }
+                // If all cards are gone, hide the output section
+                if (document.getElementById('results-container').children.length === 0) {
+                    document.getElementById('output').classList.add('hidden');
+                    feedbackDiv.innerHTML += '<div class="p-4 bg-blue-100 text-blue-700 rounded-md mt-2">Alle passenden Kunden wurden gelöscht.</div>';
+                }
+            }
+        } catch (error) {
+            feedbackDiv.innerHTML = `<div class="p-4 bg-red-100 text-red-700 rounded-md">Ein Fehler ist aufgetreten: ${error.message}</div>`;
+        }
+    }
+</script>
+{% endblock %}

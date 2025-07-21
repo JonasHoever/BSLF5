@@ -1,0 +1,78 @@
+{% extends "layouts/layout.html" %}
+
+{% block title %}Suche nach Kunden-ID{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="text-2xl font-bold text-gray-800 mb-6">Nutzerdaten anhand der ID auslesen</h1>
+
+    <div class="space-y-4">
+        <div>
+            <label for="customerID" class="block text-sm font-medium text-gray-700">Kundennummer:</label>
+            <input type="text" id="customerID" class="form-input mt-1" placeholder="Geben Sie die Kundennummer ein">
+        </div>
+        
+        <button class="btn-primary w-full" id="fetchDataButton">
+            Daten abrufen
+        </button>
+    </div>
+
+    <div id="feedback" class="mt-6"></div>
+
+    <div class="hidden mt-6 border-t border-gray-200 pt-6" id="output">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">Gefundene Daten</h2>
+        <div id="results-list" class="space-y-2">
+            </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('fetchDataButton').addEventListener('click', async () => {
+        const customerID = document.getElementById('customerID').value.trim();
+        const outputDiv = document.getElementById('output');
+        const resultsList = document.getElementById('results-list');
+        const feedbackDiv = document.getElementById('feedback');
+
+        outputDiv.classList.add('hidden');
+        resultsList.innerHTML = '';
+        feedbackDiv.innerHTML = '<div class="text-center text-gray-500">Lade Daten...</div>';
+
+        if (!customerID) {
+            feedbackDiv.innerHTML = '<div class="p-4 bg-red-100 text-red-700 rounded-md">Bitte geben Sie eine Kundennummer ein.</div>';
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/read_customer_data_id', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ CustomerID: customerID }),
+            });
+
+            const data = await response.json();
+            feedbackDiv.innerHTML = '';
+
+            if (data.error) {
+                feedbackDiv.innerHTML = `<div class="p-4 bg-red-100 text-red-700 rounded-md">${data.error}</div>`;
+            } else {
+                const fields = {
+                    "Kundennummer": data.KundenID, "Vorname": data.Vorname, "Nachname": data.Nachname,
+                    "Straße": data.Straße, "Hausnummer": data.Hausnummer, "Ort": data.Ort, "Postleitzahl": data.PLZ,
+                    "Auftragsnummer": data.AuftragID, "Bestelldatum": data.Bestelldatum, "Abholdatum": data.Abholdatum,
+                    "Gesamtpreis": data.Gesamtpreis
+                };
+
+                for (const [label, value] of Object.entries(fields)) {
+                    const item = document.createElement('div');
+                    item.className = 'result-item';
+                    item.innerHTML = `<span class="result-item-label">${label}:</span><span class="result-item-value">${value || 'N/A'}</span>`;
+                    resultsList.appendChild(item);
+                }
+                outputDiv.classList.remove('hidden');
+            }
+        } catch (error) {
+            feedbackDiv.innerHTML = `<div class="p-4 bg-red-100 text-red-700 rounded-md">Ein Fehler ist aufgetreten: ${error.message}</div>`;
+        }
+    });
+</script>
+{% endblock %}

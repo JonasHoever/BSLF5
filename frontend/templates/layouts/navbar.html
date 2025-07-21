@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Kunden Daten{% endblock %}</title>
+    <!-- Hier können gemeinsame CSS-Links oder Meta-Tags hinzugefügt werden -->
+</head>
+<body>
+    <nav style="background-color: #333; color: white; padding: 10px; text-align: center;">
+        <!-- Dies ist ein Platzhalter für deine Navigationsleiste -->
+        <span>Meine Kunden App</span>
+    </nav>
+    <main>
+        {# Der Inhalt aus read_cust_id.html wird hier eingefügt #}
+        {% block content %}{% endblock %}
+    </main>
+    <footer>
+        <!-- Optional: Gemeinsamer Footer-Inhalt -->
+    </footer>
+</body>
+</html>
