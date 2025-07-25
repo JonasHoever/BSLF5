@@ -63,4 +63,8 @@ def delete_customer_page():
 def init_db_page():
     return render_template("init_db.html")
 
+@app.route("/test")
+def test():
+    return f"test"
+
 app.run(host="0.0.0.0",port=3000,debug=True)
